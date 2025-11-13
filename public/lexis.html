@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Lexis - A hyper-modern browser extension for seamless translation, instant transcription, and AI-powered writing assistance.">
+    <title>Lexis - Translate, Transcribe, Transform</title>
+    <style>
+        /* CSS Reset & Base Styles */
+        *, *::before, *::after {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --color-bg: #0a0b0f;
+            --color-bg-elevated: #12131a;
+            --color-bg-subtle: #1a1b24;
+            --color-text: #ffffff;
+            --color-text-muted: #a8a9b4;
+            --color-text-subtle: #696a78;
+            --color-accent: #6366f1;
+            --color-accent-bright: #818cf8;
+            --color-success: #10b981;
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 2rem;
+            --spacing-lg: 4rem;
+            --spacing-xl: 6rem;
+            --border-radius: 12px;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        html {
+            scroll-behavior: smooth;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Inter', 'SF Pro Display', 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+
+        /* Typography */
+        h1, h2, h3, h4, h5, h6 {
+            font-weight: 600;
+            line-height: 1.2;
+            letter-spacing: -0.02em;
+        }
+
+        h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 700;
+        }
+
+        h2 {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+        }
+
+        h3 {
+            font-size: clamp(1.5rem, 3vw, 2rem);
+        }
+
+        p {
+            font-size: clamp(1rem, 2vw, 1.125rem);
+            line-height: 1.7;
+        }
+
+        /* Navigation */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            padding: var(--spacing-sm) var(--spacing-md);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            transition: var(--transition);
+        }
+
+        nav.scrolled {
+            background-color: rgba(10, 11, 15, 0.9);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .nav-logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--color-text);
+            text-decoration: none;
+            letter-spacing: -0.03em;
+        }
+
+        .nav-cta {
+            padding: 0.625rem 1.5rem;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-bright));
+            color: var(--color-text);
+            border: none;
+            border-radius: 100px;
+            font-size: 0.9375rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .nav-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+        }
+
+        .nav-cta:focus {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+
+        /* Container */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 var(--spacing-md);
+        }
+
+        /* Section Base */
+        section {
+            padding: var(--spacing-xl) 0;
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out, transform 0.8s ease-out;
+        }
+
+        section.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            padding-top: var(--spacing-xl);
+        }
+
+        .hero-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 800px;
+            height: 800px;
+            background: radial-gradient(circle, rgba(99, 102, 241, 0.18) 0%, transparent 65%);
+            pointer-events: none;
+            transform: translate(-50%, -50%) scale(1);
+            transition: opacity 0.6s ease, transform 0.6s ease;
+            animation: pulse 8s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 0.48; }
+            50% { opacity: 0.72; }
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            padding: 0.5rem 1rem;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 100px;
+            font-size: 0.875rem;
+            color: var(--color-text-muted);
+            margin-bottom: var(--spacing-md);
+            backdrop-filter: blur(10px);
+        }
+
+        .hero-badge span {
+            color: var(--color-success);
+            font-weight: 600;
+        }
+
+        .hero h1 {
+            margin-bottom: var(--spacing-md);
+            background: linear-gradient(135deg, #ffffff 0%, #a8a9b4 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-description {
+            max-width: 600px;
+            margin: 0 auto var(--spacing-lg);
+            color: var(--color-text-muted);
+            font-size: clamp(1.125rem, 2.5vw, 1.25rem);
+        }
+
+        .hero-cta-group {
+            display: flex;
+            gap: var(--spacing-sm);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            padding: 1rem 2.5rem;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-bright));
+            color: var(--color-text);
+            border: none;
+            border-radius: 100px;
+            font-size: 1.0625rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 32px rgba(99, 102, 241, 0.4);
+        }
+
+        .btn-primary:focus {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+
+        .btn-secondary {
+            padding: 1rem 2.5rem;
+            background: transparent;
+            color: var(--color-text);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 100px;
+            font-size: 1.0625rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            text-decoration: none;
+            display: inline-block;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.05);
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:focus {
+            outline: 2px solid var(--color-text);
+            outline-offset: 2px;
+        }
+
+        /* Features Section */
+        .features {
+            background: var(--color-bg);
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: var(--spacing-lg);
+        }
+
+        .section-subtitle {
+            color: var(--color-accent);
+            text-transform: uppercase;
+            font-size: 0.875rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .section-title {
+            margin-bottom: var(--spacing-sm);
+        }
+
+        .section-description {
+            color: var(--color-text-muted);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-lg);
+        }
+
+        .feature-card {
+            background: var(--color-bg-elevated);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: var(--border-radius);
+            padding: var(--spacing-lg);
+            transition: var(--transition);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--color-accent), var(--color-accent-bright));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: var(--transition);
+        }
+
+        .feature-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .feature-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(129, 140, 248, 0.1));
+            border: 1px solid rgba(99, 102, 241, 0.2);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: var(--spacing-md);
+            transition: var(--transition);
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: rotate(5deg) scale(1.1);
+        }
+
+        .feature-icon svg {
+            width: 28px;
+            height: 28px;
+            stroke: var(--color-accent-bright);
+            fill: none;
+            stroke-width: 2;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+        }
+
+        .feature-title {
+            margin-bottom: var(--spacing-sm);
+            font-size: 1.5rem;
+        }
+
+        .feature-description {
+            color: var(--color-text-muted);
+            margin-bottom: var(--spacing-md);
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            color: var(--color-text-subtle);
+            margin-bottom: 0.5rem;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--color-success);
+            font-weight: 700;
+        }
+
+        /* Trust Section */
+        .trust {
+            background: var(--color-bg-subtle);
+            text-align: center;
+        }
+
+        .trust-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: var(--spacing-lg);
+            margin-top: var(--spacing-lg);
+        }
+
+        .trust-stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .trust-stat-value {
+            font-size: clamp(2.5rem, 5vw, 3.5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--color-accent), var(--color-accent-bright));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: var(--spacing-xs);
+        }
+
+        .trust-stat-label {
+            color: var(--color-text-muted);
+            font-size: 1rem;
+        }
+
+        .trust-logos {
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-lg);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .trust-logos-label {
+            color: var(--color-text-subtle);
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: var(--spacing-md);
+        }
+
+        .trust-logos-grid {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: var(--spacing-lg);
+            flex-wrap: wrap;
+        }
+
+        .trust-logo {
+            color: var(--color-text-subtle);
+            font-size: 1.125rem;
+            font-weight: 600;
+            opacity: 0.6;
+            transition: var(--transition);
+        }
+
+        .trust-logo:hover {
+            opacity: 1;
+            color: var(--color-text);
+        }
+
+        /* CTA Section */
+        .cta {
+            background: linear-gradient(135deg, var(--color-bg-elevated) 0%, var(--color-bg-subtle) 100%);
+            text-align: center;
+        }
+
+        .cta-content {
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .cta h2 {
+            margin-bottom: var(--spacing-md);
+        }
+
+        .cta-description {
+            color: var(--color-text-muted);
+            margin-bottom: var(--spacing-lg);
+            font-size: 1.25rem;
+        }
+
+        .cta-note {
+            margin-top: var(--spacing-md);
+            color: var(--color-text-subtle);
+            font-size: 0.875rem;
+        }
+
+        /* Footer */
+        footer {
+            background: var(--color-bg);
+            padding: var(--spacing-lg) 0 var(--spacing-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+        }
+
+        .footer-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: var(--spacing-md);
+        }
+
+        .footer-logo {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--color-text);
+        }
+
+        .footer-links {
+            display: flex;
+            gap: var(--spacing-md);
+            list-style: none;
+        }
+
+        .footer-links a {
+            color: var(--color-text-muted);
+            text-decoration: none;
+            font-size: 0.9375rem;
+            transition: var(--transition);
+        }
+
+        .footer-links a:hover {
+            color: var(--color-text);
+        }
+
+        .footer-links a:focus {
+            outline: 2px solid var(--color-accent);
+            outline-offset: 2px;
+        }
+
+        .footer-copyright {
+            width: 100%;
+            text-align: center;
+            margin-top: var(--spacing-md);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.05);
+            color: var(--color-text-subtle);
+            font-size: 0.875rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            :root {
+                --spacing-lg: 3rem;
+                --spacing-xl: 4rem;
+            }
+
+            nav {
+                padding: var(--spacing-sm);
+            }
+
+            .features-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .hero-cta-group {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-primary,
+            .btn-secondary {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .footer-content {
+                flex-direction: column;
+                text-align: center;
+            }
+
+            .footer-links {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+        }
+
+        /* Accessibility */
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+
+        /* Loading Animation */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: fadeIn 0.6s ease-out forwards;
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav id="nav" role="navigation" aria-label="Main navigation">
+        <a href="#" class="nav-logo" aria-label="Lexis home">Lexis</a>
+        <a href="#install" class="nav-cta" aria-label="Install Lexis extension">Install Now</a>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero visible" id="hero" role="banner">
+        <div class="hero-glow" aria-hidden="true"></div>
+        <div class="container">
+            <div class="hero-content">
+                <div class="hero-badge" role="status">
+                    <span>Now in Beta</span> · Available for Chrome, Firefox & Edge
+                </div>
+                <h1>Translate, Transcribe, Transform</h1>
+                <p class="hero-description">
+                    A hyper-intelligent browser extension that seamlessly translates languages, 
+                    transcribes audio, and elevates your writing—all without leaving your workflow.
+                </p>
+                <div class="hero-cta-group">
+                    <a href="#install" class="btn-primary" id="hero-cta" aria-label="Add Lexis to your browser">Add to Browser</a>
+                    <a href="#features" class="btn-secondary" aria-label="Learn more about Lexis features">Learn More</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Features Section -->
+    <section class="features" id="features">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-subtitle">Powerful Features</div>
+                <h2 class="section-title">Everything you need, built in</h2>
+                <p class="section-description">
+                    Lexis combines cutting-edge AI with an elegant interface to deliver 
+                    three essential tools that transform how you work online.
+                </p>
+            </div>
+
+            <div class="features-grid">
+                <!-- Feature 1: Translation -->
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M3 5h12M9 3v2m1.048 9.5A18.022 18.022 0 0 1 6.412 9m0 0c.276.738.638 1.448 1.084 2.124M7.5 14.5l-2.12-2.12M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0z"/>
+                            <path d="m12 14l.46 2.3a3 3 0 0 0 2.37 2.37L17 19l-2.17.23a3 3 0 0 0-2.37 2.37L12 24l-.46-2.3a3 3 0 0 0-2.37-2.37L7 19l2.17-.23a3 3 0 0 0 2.37-2.37L12 14z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Seamless Translation</h3>
+                    <p class="feature-description">
+                        Instantly translate web pages, selected text, or text within images using 
+                        multiple AI providers for unmatched accuracy.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Real-time page translation with context awareness</li>
+                        <li>Multi-provider support (Google, DeepL, OpenAI)</li>
+                        <li>OCR-powered image text translation</li>
+                        <li>Hover-to-translate for quick lookups</li>
+                    </ul>
+                </article>
+
+                <!-- Feature 2: Transcription -->
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+                            <path d="M19 10v2a7 7 0 0 1-14 0v-2M12 19v4M8 23h8"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">Instant Transcription</h3>
+                    <p class="feature-description">
+                        Transcribe audio from any tab, meeting, or video file into clean, 
+                        time-stamped text with speaker detection.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Tab audio capture for meetings & videos</li>
+                        <li>Automatic speaker identification</li>
+                        <li>Real-time transcription with timestamps</li>
+                        <li>Export in multiple formats (TXT, SRT, JSON)</li>
+                    </ul>
+                </article>
+
+                <!-- Feature 3: AI Writing Assistant -->
+                <article class="feature-card">
+                    <div class="feature-icon" aria-hidden="true">
+                        <svg viewBox="0 0 24 24">
+                            <path d="M12 20h9M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"/>
+                        </svg>
+                    </div>
+                    <h3 class="feature-title">AI Writing Assistant</h3>
+                    <p class="feature-description">
+                        Your intelligent co-pilot for writing better emails, posts, and documents 
+                        with grammar checks, tone adjustments, and smart suggestions.
+                    </p>
+                    <ul class="feature-list">
+                        <li>Real-time grammar & style corrections</li>
+                        <li>Tone adjustment (professional, casual, friendly)</li>
+                        <li>Smart rewriting & sentence completion</li>
+                        <li>Context-aware prompts for any text field</li>
+                    </ul>
+                </article>
+            </div>
+        </div>
+    </section>
+
+    <!-- Trust Section -->
+    <section class="trust" id="trust">
+        <div class="container">
+            <div class="section-header">
+                <div class="section-subtitle">Trusted Globally</div>
+                <h2 class="section-title">Built for professionals</h2>
+            </div>
+
+            <div class="trust-stats">
+                <div class="trust-stat">
+                    <div class="trust-stat-value">50K+</div>
+                    <div class="trust-stat-label">Active Users</div>
+                </div>
+                <div class="trust-stat">
+                    <div class="trust-stat-value">4.9</div>
+                    <div class="trust-stat-label">Average Rating</div>
+                </div>
+                <div class="trust-stat">
+                    <div class="trust-stat-value">1M+</div>
+                    <div class="trust-stat-label">Translations</div>
+                </div>
+            </div>
+
+            <div class="trust-logos">
+                <div class="trust-logos-label">Trusted by teams at</div>
+                <div class="trust-logos-grid">
+                    <div class="trust-logo">Vercel</div>
+                    <div class="trust-logo">Linear</div>
+                    <div class="trust-logo">Notion</div>
+                    <div class="trust-logo">Stripe</div>
+                    <div class="trust-logo">OpenAI</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta" id="install">
+        <div class="container">
+            <div class="cta-content">
+                <h2>Ready to transform your workflow?</h2>
+                <p class="cta-description">
+                    Join thousands of professionals who are already using Lexis 
+                    to work smarter and faster.
+                </p>
+                <a href="#" class="btn-primary" aria-label="Install Lexis extension now">Install Lexis Now</a>
+                <p class="cta-note">Free during beta · No credit card required</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer role="contentinfo">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-logo">Lexis</div>
+                <ul class="footer-links">
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="#privacy">Privacy</a></li>
+                    <li><a href="#terms">Terms</a></li>
+                    <li><a href="#support">Support</a></li>
+                    <li><a href="#docs">Documentation</a></li>
+                </ul>
+            </div>
+            <div class="footer-copyright">
+                &copy; 2024 Lexis. All rights reserved. Built with precision and care.
+            </div>
+        </div>
+    </footer>
+
+    <!-- JavaScript -->
+    <script>
+        // Smooth scroll animation for sections
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all sections except hero (already visible)
+        document.querySelectorAll('section:not(.hero)').forEach(section => {
+            observer.observe(section);
+        });
+
+        // Navigation scroll effect & hero parallax
+        const nav = document.getElementById('nav');
+        const heroGlow = document.querySelector('.hero-glow');
+
+        const handleScroll = () => {
+            const currentScroll = window.pageYOffset;
+
+            if (currentScroll > 100) {
+                nav.classList.add('scrolled');
+            } else {
+                nav.classList.remove('scrolled');
+            }
+
+            if (heroGlow) {
+                const limitedScroll = Math.min(currentScroll, window.innerHeight);
+                const translateY = limitedScroll * 0.25;
+                const scale = 1 + limitedScroll * 0.0004;
+                heroGlow.style.transform = `translate(-50%, calc(-50% + ${translateY}px)) scale(${scale.toFixed(3)})`;
+            }
+        };
+
+        window.addEventListener('scroll', handleScroll);
+        handleScroll();
+
+        // Animate hero content on load
+        window.addEventListener('load', () => {
+            const heroContent = document.querySelector('.hero-content');
+            heroContent.classList.add('animate-in');
+        });
+
+        // Handle CTA button clicks (placeholder for actual extension installation)
+        document.querySelectorAll('.btn-primary, .nav-cta').forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                
+                // Detect browser and show appropriate message
+                const isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+                const isFirefox = /Firefox/.test(navigator.userAgent);
+                const isEdge = /Edg/.test(navigator.userAgent);
+                
+                let browserName = 'your browser';
+                if (isChrome) browserName = 'Chrome Web Store';
+                else if (isFirefox) browserName = 'Firefox Add-ons';
+                else if (isEdge) browserName = 'Edge Add-ons';
+                
+                // In production, this would redirect to the actual extension store
+                alert(`Install Lexis from ${browserName}\n\nThis is a demo landing page. In production, this button would redirect to the browser extension marketplace.`);
+            });
+        });
+
+        // Keyboard navigation enhancement
+        document.addEventListener('keydown', (e) => {
+            // Enable tab navigation with visible focus
+            if (e.key === 'Tab') {
+                document.body.classList.add('keyboard-nav');
+            }
+        });
+
+        document.addEventListener('mousedown', () => {
+            document.body.classList.remove('keyboard-nav');
+        });
+
+        // Performance optimization: Lazy load feature cards animations
+        const featureCards = document.querySelectorAll('.feature-card');
+        const cardObserver = new IntersectionObserver((entries) => {
+            entries.forEach((entry, index) => {
+                if (entry.isIntersecting) {
+                    setTimeout(() => {
+                        entry.target.style.opacity = '1';
+                        entry.target.style.transform = 'translateY(0)';
+                    }, index * 100);
+                    cardObserver.unobserve(entry.target);
+                }
+            });
+        }, { threshold: 0.2 });
+
+        featureCards.forEach(card => {
+            card.style.opacity = '0';
+            card.style.transform = 'translateY(20px)';
+            card.style.transition = 'opacity 0.6s ease-out, transform 0.6s ease-out';
+            cardObserver.observe(card);
+        });
+    </script>
+</body>
+</html>
